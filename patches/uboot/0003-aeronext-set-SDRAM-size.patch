@@ -1,0 +1,26 @@
+From 5de1c3be2bab2ec67f7b1fa55c62c36b1f52781a Mon Sep 17 00:00:00 2001
+From: David Cerdeira <davidmcerdeira@gmail.com>
+Date: Wed, 25 Mar 2026 08:55:45 +0000
+Subject: [PATCH 3/3] aeronext: set SDRAM size
+
+Signed-off-by: David Cerdeira <davidmcerdeira@gmail.com>
+---
+ include/configs/imx8mn_evk.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/configs/imx8mn_evk.h b/include/configs/imx8mn_evk.h
+index 3c6179ee20e..0bba1e67f0a 100644
+--- a/include/configs/imx8mn_evk.h
++++ b/include/configs/imx8mn_evk.h
+@@ -193,7 +193,7 @@
+ #ifdef CONFIG_TARGET_IMX8MN_DDR3_EVK
+ #define PHYS_SDRAM_SIZE			0x40000000 /* 1GB DDR */
+ #else
+-#define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
++#define PHYS_SDRAM_SIZE			0x40000000 /* 1GB DDR */
+ #endif
+ 
+ #define CONFIG_MXC_UART_BASE		UART1_BASE_ADDR
+-- 
+2.34.1
+

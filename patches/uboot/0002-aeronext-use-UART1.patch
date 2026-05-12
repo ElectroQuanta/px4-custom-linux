@@ -1,0 +1,228 @@
+From 2b806f1ebb183576ff671f4efb13ad5057207ea0 Mon Sep 17 00:00:00 2001
+From: David Cerdeira <davidmcerdeira@gmail.com>
+Date: Thu, 12 Mar 2026 13:40:20 +0000
+Subject: [PATCH 2/3] aeronext: use UART1
+
+Signed-off-by: David Cerdeira <davidmcerdeira@gmail.com>
+---
+ arch/arm/dts/imx8mn-evk-u-boot.dtsi     |  4 ++--
+ arch/arm/dts/imx8mn-evk.dts             |  3 ++-
+ arch/arm/dts/imx8mn-evk.dtsi            | 21 ++++++++++++++++++---
+ board/freescale/imx8mn_evk/imx8mn_evk.c |  7 ++++---
+ drivers/video/u_boot_logo.S             |  8 ++++++++
+ include/configs/imx8mn_evk.h            |  4 ++--
+ tools/boot/bootm.c                      |  1 +
+ tools/boot/fdt_region.c                 |  1 +
+ tools/boot/image-cipher.c               |  1 +
+ tools/boot/image-fit-sig.c              |  1 +
+ tools/boot/image-fit.c                  |  1 +
+ tools/boot/image-host.c                 |  1 +
+ tools/boot/image.c                      |  1 +
+ 13 files changed, 43 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/video/u_boot_logo.S
+ create mode 100644 tools/boot/bootm.c
+ create mode 100644 tools/boot/fdt_region.c
+ create mode 100644 tools/boot/image-cipher.c
+ create mode 100644 tools/boot/image-fit-sig.c
+ create mode 100644 tools/boot/image-fit.c
+ create mode 100644 tools/boot/image-host.c
+ create mode 100644 tools/boot/image.c
+
+diff --git a/arch/arm/dts/imx8mn-evk-u-boot.dtsi b/arch/arm/dts/imx8mn-evk-u-boot.dtsi
+index 67f1b9f800a..f3c5829ca1a 100644
+--- a/arch/arm/dts/imx8mn-evk-u-boot.dtsi
++++ b/arch/arm/dts/imx8mn-evk-u-boot.dtsi
+@@ -122,7 +122,7 @@
+ 	u-boot,dm-spl;
+ };
+ 
+-&pinctrl_uart2 {
++&pinctrl_uart1 {
+ 	u-boot,dm-spl;
+ };
+ 
+@@ -158,7 +158,7 @@
+ 	u-boot,dm-spl;
+ };
+ 
+-&uart2 {
++&uart1 {
+ 	u-boot,dm-spl;
+ };
+ 
+diff --git a/arch/arm/dts/imx8mn-evk.dts b/arch/arm/dts/imx8mn-evk.dts
+index 4d1c350f862..03ed6d519a4 100644
+--- a/arch/arm/dts/imx8mn-evk.dts
++++ b/arch/arm/dts/imx8mn-evk.dts
+@@ -14,7 +14,8 @@
+ 	compatible = "fsl,imx8mn-evk", "fsl,imx8mn";
+ 
+ 	chosen {
+-		bootargs = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200";
++		bootargs = "console=ttymxc0,115200 earlycon=ec_imx6q,0x30860000,115200";
++		stdout-path = &uart1;
+ 	};
+ 
+ };
+diff --git a/arch/arm/dts/imx8mn-evk.dtsi b/arch/arm/dts/imx8mn-evk.dtsi
+index e7f3ac9d5e0..dc2e12834d8 100644
+--- a/arch/arm/dts/imx8mn-evk.dtsi
++++ b/arch/arm/dts/imx8mn-evk.dtsi
+@@ -8,8 +8,8 @@
+ 
+ / {
+ 	chosen {
+-		bootargs = "console=ttymxc1,115200 earlycon=ec_imx6q,0x30890000,115200";
+-		stdout-path = &uart2;
++		bootargs = "console=ttymxc0,115200 earlycon=ec_imx6q,0x30860000,115200";
++		stdout-path = &uart1;
+ 	};
+ 
+ 	gpio-leds {
+@@ -221,10 +221,18 @@
+ 	status = "okay";
+ };
+ 
++&uart1 { /* console */
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart1>;
++	assigned-clocks = <&clk IMX8MN_CLK_UART1>;
++	assigned-clock-parents = <&clk IMX8MN_SYS_PLL1_80M>;
++	status = "okay";
++};
++
+ &uart2 { /* console */
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_uart2>;
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &usbotg1 {
+@@ -383,6 +391,13 @@
+ 		>;
+ 	};
+ 
++	pinctrl_uart1: uart1grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
++			MX8MN_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
++		>;
++		};
++
+ 	pinctrl_uart2: uart2grp {
+ 		fsl,pins = <
+ 			MX8MN_IOMUXC_UART2_RXD_UART2_DCE_RX	0x140
+diff --git a/board/freescale/imx8mn_evk/imx8mn_evk.c b/board/freescale/imx8mn_evk/imx8mn_evk.c
+index be7bdec6354..f89b78c08ea 100644
+--- a/board/freescale/imx8mn_evk/imx8mn_evk.c
++++ b/board/freescale/imx8mn_evk/imx8mn_evk.c
+@@ -30,8 +30,8 @@ DECLARE_GLOBAL_DATA_PTR;
+ #define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+ 
+ static iomux_v3_cfg_t const uart_pads[] = {
+-	IMX8MN_PAD_UART2_RXD__UART2_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
+-	IMX8MN_PAD_UART2_TXD__UART2_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MN_PAD_UART1_RXD__UART1_DCE_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
++	IMX8MN_PAD_UART1_TXD__UART1_DCE_TX | MUX_PAD_CTRL(UART_PAD_CTRL),
+ };
+ 
+ static iomux_v3_cfg_t const wdog_pads[] = {
+@@ -98,7 +98,8 @@ int board_early_init_f(void)
+ 
+ 	imx_iomux_v3_setup_multiple_pads(uart_pads, ARRAY_SIZE(uart_pads));
+ 
+-	init_uart_clk(1);
++	init_uart_clk(0);
++
+ 
+ #ifdef CONFIG_NAND_MXS
+ 	setup_gpmi_nand(); /* SPL will call the board_early_init_f */
+diff --git a/drivers/video/u_boot_logo.S b/drivers/video/u_boot_logo.S
+new file mode 100644
+index 00000000000..80551a33b3b
+--- /dev/null
++++ b/drivers/video/u_boot_logo.S
+@@ -0,0 +1,8 @@
++.section .rodata.splash.init,"a"
++.balign 16
++.global __splash_u_boot_logo_begin
++__splash_u_boot_logo_begin:
++.incbin "drivers/video/u_boot_logo.bmp" 
++__splash_u_boot_logo_end:
++.global __splash_u_boot_logo_end
++.balign 16
+diff --git a/include/configs/imx8mn_evk.h b/include/configs/imx8mn_evk.h
+index 4c2a2ee7986..3c6179ee20e 100644
+--- a/include/configs/imx8mn_evk.h
++++ b/include/configs/imx8mn_evk.h
+@@ -115,7 +115,7 @@
+ 	"bsp_script=boot.scr\0" \
+ 	"image=Image\0" \
+ 	"splashimage=0x50000000\0" \
+-	"console=ttymxc1,115200\0" \
++	"console=ttymxc0,115200\0" \
+ 	"fdt_addr_r=0x43000000\0"			\
+ 	"fdt_addr=0x43000000\0"			\
+ 	"fdt_high=0xffffffffffffffff\0"		\
+@@ -196,7 +196,7 @@
+ #define PHYS_SDRAM_SIZE			0x80000000 /* 2GB DDR */
+ #endif
+ 
+-#define CONFIG_MXC_UART_BASE		UART2_BASE_ADDR
++#define CONFIG_MXC_UART_BASE		UART1_BASE_ADDR
+ 
+ /* Monitor Command Prompt */
+ #define CONFIG_SYS_CBSIZE		2048
+diff --git a/tools/boot/bootm.c b/tools/boot/bootm.c
+new file mode 100644
+index 00000000000..31ddd95f630
+--- /dev/null
++++ b/tools/boot/bootm.c
+@@ -0,0 +1 @@
++#include <../boot/bootm.c>
+diff --git a/tools/boot/fdt_region.c b/tools/boot/fdt_region.c
+new file mode 100644
+index 00000000000..1bb9c886c2f
+--- /dev/null
++++ b/tools/boot/fdt_region.c
+@@ -0,0 +1 @@
++#include <../boot/fdt_region.c>
+diff --git a/tools/boot/image-cipher.c b/tools/boot/image-cipher.c
+new file mode 100644
+index 00000000000..5013afee61d
+--- /dev/null
++++ b/tools/boot/image-cipher.c
+@@ -0,0 +1 @@
++#include <../boot/image-cipher.c>
+diff --git a/tools/boot/image-fit-sig.c b/tools/boot/image-fit-sig.c
+new file mode 100644
+index 00000000000..9da06c71cbe
+--- /dev/null
++++ b/tools/boot/image-fit-sig.c
+@@ -0,0 +1 @@
++#include <../boot/image-fit-sig.c>
+diff --git a/tools/boot/image-fit.c b/tools/boot/image-fit.c
+new file mode 100644
+index 00000000000..9168e11933a
+--- /dev/null
++++ b/tools/boot/image-fit.c
+@@ -0,0 +1 @@
++#include <../boot/image-fit.c>
+diff --git a/tools/boot/image-host.c b/tools/boot/image-host.c
+new file mode 100644
+index 00000000000..fb0ad56881d
+--- /dev/null
++++ b/tools/boot/image-host.c
+@@ -0,0 +1 @@
++#include <../boot/image-host.c>
+diff --git a/tools/boot/image.c b/tools/boot/image.c
+new file mode 100644
+index 00000000000..48a2e765d73
+--- /dev/null
++++ b/tools/boot/image.c
+@@ -0,0 +1 @@
++#include <../boot/image.c>
+-- 
+2.34.1
+

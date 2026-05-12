@@ -1,0 +1,31 @@
+# Build Artifacts
+*.bin
+*.dtb
+*.ext4
+Image
+flash.bin
+px4
+
+# Build Directories
+output/
+build/
+dl/
+
+# Component Source Trees (if cloned in-tree as per guide)
+/imx-atf/
+/uboot-imx/
+/linux-imx/
+/imx-mkimage/
+/firmware/
+/buildroot/
+/PX4-Autopilot/
+
+# Temporary Files
+*~
+*.swp
+*.bak
+.DS_Store
+
+# Toolchain / Environment
+.env
+.venv/
