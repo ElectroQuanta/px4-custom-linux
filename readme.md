@@ -36,6 +36,7 @@ make PLAT=imx8mn bl31 CROSS_COMPILE=aarch64-linux-gnu- IMX_BOOT_UART_BASE=0x3086
 ## 3. U-Boot
 
 ```bash
+cd $PROJ_DIR
 git clone https://github.com/nxp-imx/uboot-imx.git -b lf_v2022.04 --depth 1
 cd uboot-imx
 git am ../patches/uboot/*.patch
@@ -50,6 +51,7 @@ make -j$(nproc) CROSS_COMPILE=aarch64-linux-gnu-
 Download and extract the LPDDR4 training firmware. Accept the EULA.
 
 ```bash
+cd $PROJ_DIR
 mkdir firmware && cd firmware
 wget https://www.nxp.com/lgfiles/NMG/MAD/YOCTO/firmware-imx-8.20.bin
 chmod +x firmware-imx-8.20.bin
@@ -63,6 +65,7 @@ chmod +x firmware-imx-8.20.bin
 Use `imx-mkimage` to combine the binaries.
 
 ```bash
+cd $PROJ_DIR
 git clone https://github.com/nxp-imx/imx-mkimage.git -b lf-6.12.3-1.0.0 --depth 1
 cd imx-mkimage/iMX8M
 
@@ -86,6 +89,7 @@ make SOC=iMX8MN flash_evk_no_hdmi
 Build the kernel using the project configuration fragment.
 
 ```bash
+cd $PROJ_DIR
 git clone https://github.com/nxp-imx/linux-imx.git -b lf-6.12.3-1.0.0 --depth 1
 cd linux-imx
 make ARCH=arm64 imx_v8_defconfig
@@ -100,6 +104,7 @@ make -j$(nproc) ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
 Use the stripped Buildroot configuration to generate the RootFS.
 
 ```bash
+cd $PROJ_DIR
 git clone https://github.com/buildroot/buildroot.git -b 2025.11.x --depth 1
 cd buildroot
 make BR2_EXTERNAL=../br-external mx8mn_custom_defconfig
@@ -189,7 +194,8 @@ sudo tar -xpf buildroot/output/images/rootfs.tar -C /mnt
 sudo mkdir -p ${PX4_DEST_DIR}/bin ${PX4_DEST_DIR}/etc
 sudo rsync -rlptD --delete ${PX4_BUILD_DIR}/bin/ ${PX4_DEST_DIR}/bin/ 
 sudo rsync -rlptD --delete ${PX4_BUILD_DIR}/etc/ ${PX4_DEST_DIR}/etc/ 
-sudo cp ${PX4_CFG_DIR}/* ${PX4_DEST_DIR}/ 
+sudo cp ${PX4_CFG_DIR}/run.sh ${PX4_CFG_DIR}/mx8mn_mc.config ${PX4_DEST_DIR}/ 
+sudo cp ${PX4_CFG_DIR}/S99px4 /mnt/etc/init.d/
 sync
 sudo umount /mnt
 ```

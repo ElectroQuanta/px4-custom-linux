@@ -1214,6 +1214,7 @@
 					clock-names = "ipg", "per";
 					status = "okay";
 					pinctrl-names = "default";
+					fsl,inverted-rx;
 					pinctrl-0 = <0x2f>;
 				};
 			};
