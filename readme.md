@@ -224,3 +224,16 @@ ______  __   __    ___
 
 px4 starting.
 ``` 
+
+## 12. Notes
+1. Ensure all components are tightly secured, especially the GPS and the battery
+2. When testing outside, always perform a calibration first, and wait for the
+   GPS signal to set (at least 15 satellites)
+3. Sometimes a X/Y position control error may occur. Wait a little for it to
+   vanish.
+4. To force drone arming from the PX4 console:
+
+   ```bash
+   commander arm -f
+   ``` 
+
