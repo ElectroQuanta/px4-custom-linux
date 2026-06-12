@@ -1,13 +1,15 @@
 #!/bin/sh
 
 DAEMON="px4"
-RUN_SCRIPT="/home/px4/run.sh"
+PX4_DIR="/home/px4"
+RUN_SCRIPT="$PX4_DIR/run.sh"
 
 case "$1" in
     start)
 	echo "Starting $DAEMON..."
 	if [ -f "$RUN_SCRIPT" ]; then
 	    chmod +x "$RUN_SCRIPT"
+	    cd "$PX4_DIR"
 	    exec "$RUN_SCRIPT"
 	    sleep 2
 	else
