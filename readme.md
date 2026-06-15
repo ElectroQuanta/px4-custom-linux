@@ -118,6 +118,7 @@ make
 Compile the custom board hardware description.
 
 ```bash
+cd $PROJ_DIR
 # Ensure dtc is installed: sudo apt install device-tree-compiler
 dtc -I dts -O dtb -o DTS/imx8mn-evk.dtb DTS/imx8mn-evk.dts 2&>1 /dev/null
 ```
@@ -126,17 +127,18 @@ dtc -I dts -O dtb -o DTS/imx8mn-evk.dtb DTS/imx8mn-evk.dts 2&>1 /dev/null
 
 ## 9. PX4 Autopilot
 
-1. Get PX4
+1. Install prerequisites
 ```bash
-git clone https://github.com/ElectroQuanta/PX4-Autopilot.git -b mx8mn-linux --recursive
-cd PX4-Autopilot
-```
-
-2. Install prerequisites
-```bash
+cd $PROJ_DIR
 python -m venv .px4-venv
 source .px4-venv/bin/activate
 pip install -r ${PROJ_DIR}/requirements.txt
+```
+
+2. Get PX4
+```bash
+git clone https://github.com/ElectroQuanta/PX4-Autopilot.git -b mx8mn-linux --recursive
+cd PX4-Autopilot
 ```
 
 3. Build
