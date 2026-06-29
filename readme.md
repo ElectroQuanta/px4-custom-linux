@@ -205,7 +205,7 @@ Copy Linux image and DTB to BOOT partition:
 sudo mount ${SD_BOOT} /mnt
 sudo cp linux-imx/arch/arm64/boot/Image /mnt
 sudo cp DTS/imx8mn-evk.dtb /mnt
-cp $PROJ_DIR/PX4-Autopilot/build/nxp_mx8mn_uart1/nxp_mx8mn_uart1.bin $SD_BOOT/px4.bin
+sudo cp $PROJ_DIR/PX4-Autopilot/build/nxp_mx8mn_uart1/nxp_mx8mn_uart1.bin mnt/px4.bin
 sync
 sudo umount ${SD_BOOT}
 ```
@@ -272,3 +272,25 @@ fatload mmc 1:1 0x77000000 px4.bin; run prepare_mcore; bootaux 0x77000000; sleep
    ```bash
    commander arm -f
    ``` 
+
+## 13. Debug
+### OpenOCD
+Start the OpenOCD interface and GDB server
+```sh
+cd $PROJ_DIR/debug/openocd
+openocd -f interface_jlink.cfg -f target_imx8mn.cfg
+```
+### GDB client
+1. Start the GDB client
+```sh
+arm-none-eabi-gdb
+```
+2. Load the symbols
+```sh
+file $PROJ_DIR/build/nxp_mx8mn_uart1/nxp_mx8mn_uart1.elf
+```
+2. Attach to the running process and set the VTOR
+```sh
+target extended-remote localhost:3333
+set *(unsigned int*)0xE000ED08 = 0x77000000
+``` 
