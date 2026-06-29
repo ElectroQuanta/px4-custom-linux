@@ -137,11 +137,21 @@ pip install -r ${PROJ_DIR}/requirements.txt
 
 2. Get PX4
 ```bash
-git clone https://github.com/ElectroQuanta/PX4-Autopilot.git -b mx8mn-linux --recursive
+git clone https://github.com/ElectroQuanta/PX4-Autopilot.git  --recursive
 cd PX4-Autopilot
 ```
 
-3. Build
+### Linux build
+
+3. Checkout to mx8mn-linux branch and update the submodules
+```sh
+	git fetch origin
+	git checkout mx8mn-linux
+	git pull
+	git submodule update --init --recursive
+```
+
+4. Build
 ```bash
 export BR_BIN=${PROJ_DIR}/buildroot/output/host/bin
 export BR_SYSROOT=${PROJ_DIR}/buildroot/output/host/aarch64-buildroot-linux-gnu/sysroot
@@ -155,6 +165,20 @@ CMAKE_ARGS="-DCMAKE_C_COMPILER=${BR_BIN}/aarch64-buildroot-linux-gnu-gcc \
 -DCMAKE_OBJDUMP=${BR_BIN}/aarch64-buildroot-linux-gnu-objdump \
 -DCMAKE_STRIP=${BR_BIN}/aarch64-buildroot-linux-gnu-strip \
 -DCMAKE_SYSROOT=${BR_SYSROOT}"
+```
+
+### Nuttx build
+
+3. Checkout to mx8mn-m7-test branch and update the submodules
+```sh
+	git fetch origin
+	git checkout mx8mn-m7-test
+	git pull
+	git submodule update --init --recursive
+```
+4. Build PX4
+```sh
+make nxp_mx8mn_uart1
 ```
 
 ---
@@ -181,6 +205,7 @@ Copy Linux image and DTB to BOOT partition:
 sudo mount ${SD_BOOT} /mnt
 sudo cp linux-imx/arch/arm64/boot/Image /mnt
 sudo cp DTS/imx8mn-evk.dtb /mnt
+cp $PROJ_DIR/PX4-Autopilot/build/nxp_mx8mn_uart1/nxp_mx8mn_uart1.bin $SD_BOOT/px4.bin
 sync
 sudo umount ${SD_BOOT}
 ```
@@ -207,8 +232,10 @@ sudo umount /mnt
 
 ## 11. Booting the System
 
-Once the SD card is ready, insert it into the board and power it up. It should
-boot straight into Linux.
+Once the SD card is ready, insert it into the board and power it up. 
+
+### Linux 
+It should boot straight into Linux.
 
 **Run PX4**
 ```bash
@@ -227,6 +254,13 @@ ______  __   __    ___
 px4 starting.
 ``` 
 
+### Nuttx
+1. Stop U-boot autoboot
+2. Load PX4 binary and boot
+```sh
+fatload mmc 1:1 0x77000000 px4.bin; run prepare_mcore; bootaux 0x77000000; sleep 600
+``` 
+
 ## 12. Notes
 1. Ensure all components are tightly secured, especially the GPS and the battery
 2. When testing outside, always perform a calibration first, and wait for the
@@ -238,4 +272,3 @@ px4 starting.
    ```bash
    commander arm -f
    ``` 
-
